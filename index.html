@@ -17,7 +17,35 @@
     <main>
       <div class="container">
         <div class="main-container">
-          <section class="utilite">
+          <section class="settings-container">
+            <div class="settings">
+              <div class="toggle">
+                <div class="mode left">ru</div>
+                <div class="mode right">en</div>
+                <input type="checkbox" id="languageToggle" />
+                <label for="languageToggle" class="button"></label>
+              </div>
+
+              <div class="levels">
+                <div class="level green">easy</div>
+                <div class="level yellow not-choosed">normal</div>
+                <div class="level red not-choosed">hard</div>
+              </div>
+
+              <div class="mode-choose" id="quantityWords"></div>
+
+              <div class="toggle">
+                <div class="mode left">on</div>
+                <div class="mode right">off</div>
+                <input type="checkbox" id="timerToggle" />
+                <label for="timerToggle" class="button"></label>
+              </div>
+
+              <div class="mode-choose" id="quantitySeconds"></div>
+            </div>
+          </section>
+
+          <section class="utilites">
             <div class="correct-container">
               <div class="count-word-info">
                 <div class="current-word">0</div>
@@ -32,27 +60,6 @@
               <button id="restart" class="restart">
                 <img src="./img/icon-restart-3973138.png" alt="restart" />
               </button>
-            </div>
-          </section>
-
-          <section class="settings-container">
-            <div class="settings">
-              <div class="toggle-language column">
-                <div class="languages">ru</div>
-                <div class="languages">en</div>
-                <div class="toggle-circle left"></div>
-              </div>
-              <div class="levels column">
-                <div class="level green">easy</div>
-                <div class="level yellow not-choosed">normal</div>
-                <div class="level red not-choosed">hard</div>
-              </div>
-              <div class="quantity-words column">
-                <div class="quantity">10</div>
-                <div class="quantity not-choosed">25</div>
-                <div class="quantity not-choosed">50</div>
-                <div class="quantity not-choosed">100</div>
-              </div>
             </div>
           </section>
 

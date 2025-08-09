@@ -1,11 +1,16 @@
 const keyboard = document.querySelector(".keyboard");
 const textfiled = document.querySelector(".text-filed");
 const restartBtn = document.getElementById("restart");
-const toggleLanguage = document.querySelector(".toggle-language");
-const toggleCircle = document.querySelector(".toggle-circle");
+const toggleLanguage = document.getElementById("languageToggle");
+const toggleTimer = document.getElementById("timerToggle");
 const levels = document.querySelectorAll(".level");
-const quantityWords = document.querySelectorAll(".quantity");
+optionLevels = ["easy", "normal", "hard"];
+const quantityWords = document.getElementById("quantityWords");
+const optionsWords = [10, 25, 50, 100];
+const quantitySeconds = document.getElementById("quantitySeconds");
+const optionsSeconds = [10, 30, 60, 120];
 const countWordInfo = document.querySelector(".count-word-info");
+const timer = document.querySelector(".timer");
 let buttonKey = document.querySelectorAll(".button-key");
 
 let currentLanguage = "russian";
@@ -19,7 +24,13 @@ let complexity = {
 };
 let currentComplexity = complexity.easy;
 let countWords = 10;
+let countSeconds = 10;
 let currentCountWords = 0;
+let isTimerOn = toggleTimer.checked;
+
+let timerInterval;
+let startTime;
+let isTimerRunning = false;
 
 const keyboardLayout = {
   row1: [
@@ -97,16 +108,54 @@ levels.forEach((level) => {
   });
 });
 
-quantityWords.forEach((quantity) => {
-  quantity.addEventListener("click", () => {
-    quantityWords.forEach((qua) => qua.classList.add("not-choosed"));
-    quantity.classList.remove("not-choosed");
-    const quantityNum = Number(quantity.textContent.trim());
-    countWords = quantityNum;
-    const countWordValue = countWordInfo.querySelector(".count-word");
-    countWordValue.textContent = countWords;
-    loadText();
-  });
+optionsWords.forEach((value) => {
+  const id = `words-quantity-${value}`;
+
+  const radio = document.createElement("input");
+  radio.type = "radio";
+  radio.id = id;
+  radio.name = "wordCount";
+  radio.value = value;
+  if (value === 10) radio.checked = true;
+
+  const label = document.createElement("label");
+  label.htmlFor = id;
+  label.className = "choose";
+  label.textContent = value;
+
+  quantityWords.append(radio, label);
+});
+
+quantityWords.addEventListener("change", (e) => {
+  const selectedValue = e.target.value;
+  const countWord = countWordInfo.querySelector(".count-word");
+  countWord.textContent = selectedValue;
+  countWords = selectedValue;
+});
+
+optionsSeconds.forEach((value) => {
+  const id = `seconds-quantity-${value}`;
+
+  const radio = document.createElement("input");
+  radio.type = "radio";
+  radio.id = id;
+  radio.name = "secondsCount";
+  radio.value = value;
+  if (value === 10) radio.checked = true;
+
+  const label = document.createElement("label");
+  label.htmlFor = id;
+  label.className = "choose";
+  label.textContent = value;
+
+  quantitySeconds.append(radio, label);
+});
+
+quantitySeconds.addEventListener("change", (e) => {
+  const selectedValue = e.target.value;
+
+  timer.textContent = `${selectedValue}.00 s`;
+  countSeconds = selectedValue;
 });
 
 restartBtn.addEventListener("click", () => {
@@ -119,9 +168,18 @@ restartBtn.addEventListener("click", () => {
 
 toggleLanguage.addEventListener("click", () => {
   currentLanguage = currentLanguage === "russian" ? "english" : "russian";
+
+  toggleLanguage.checked = currentLanguage === "russian";
   updateUI();
-  toggleCircle.classList.toggle("left");
-  toggleCircle.classList.toggle("right");
+});
+
+toggleTimer.addEventListener("change", () => {
+  if (toggleTimer.checked) {
+    timer.classList.remove("hide");
+  } else {
+    timer.classList.add("hide");
+    resetTimer();
+  }
 });
 
 function loadKeyboard() {
@@ -154,9 +212,35 @@ function getWordsByLength(words, minLen, maxLen) {
   return words.filter((word) => word.length >= minLen && word.length <= maxLen);
 }
 
+function startTimer() {
+  if (isTimerRunning) return;
+
+  isTimerRunning = true;
+  startTime = Date.now();
+
+  timerInterval = setInterval(updateTimer, 10);
+}
+
+function updateTimer() {
+  const elapsedTime = Date.now() - startTime;
+  const seconds = (elapsedTime / 1000).toFixed(2);
+  timer.textContent = `${seconds} s`;
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  isTimerRunning = false;
+}
+
+function resetTimer() {
+  stopTimer();
+  timer.textContent = "0.00 s";
+}
+
 function loadText() {
   const currentCountWordValue = countWordInfo.querySelector(".current-word");
   currentCountWordValue.textContent = "0";
+  resetTimer();
   gameOver = false;
   currentCountWords = 0;
   currentIndex = 0;
@@ -210,25 +294,26 @@ function loadText() {
 updateUI();
 
 document.addEventListener("keydown", (e) => {
-  if (
-    e.key === "Shift" ||
-    e.key === "Control" ||
-    e.key === "Alt" ||
-    e.key === "Meta" ||
-    gameOver
-  ) {
+  if (e.key === "Control" || e.key === "Alt" || e.key === "Meta" || gameOver) {
     return;
   }
 
   buttonKey.forEach((btn) => {
+    console.log(e.key);
+
     if (btn.textContent === e.key) {
       btn.classList.add("press");
     }
   });
 
+  if (!isTimerRunning && currentIndex === 0) {
+    startTimer();
+  }
+
   const currentElement = document.querySelector(
     `[data-index="${currentIndex}"]`
   );
+
   if (!currentElement) return;
 
   const expectedChar = arrayText[currentIndex];
@@ -257,6 +342,7 @@ function moveCursor() {
     .forEach((el) => el.classList.remove("current"));
 
   if (currentIndex >= arrayText.length) {
+    stopTimer();
     alert("Текст пройден!");
     gameOver = true;
     return;
