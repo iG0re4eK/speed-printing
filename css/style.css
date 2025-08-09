@@ -61,10 +61,10 @@ main {
   font-size: 2rem;
   padding: 1rem;
   color: var(--primary-color);
+}
 
-  .timer.hide {
-    display: none;
-  }
+.hide {
+  opacity: 0;
 }
 
 .count-word-info {
@@ -109,47 +109,9 @@ main {
 
   .settings {
     display: flex;
-
     gap: 1rem;
-
     justify-content: space-between;
-  }
-}
-
-.levels {
-  display: flex;
-  gap: 0.5rem;
-
-  .level {
-    position: relative;
-    background-color: var(--primary-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 1rem;
-    width: auto;
-    padding: 0 1rem;
-    height: 2rem;
-    cursor: pointer;
-    font-weight: 600;
     transition: 0.2s ease;
-  }
-
-  .level::after {
-    opacity: 0;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-  }
-
-  .green {
-    color: rgb(68, 197, 68);
-  }
-
-  .yellow {
-    color: rgb(213, 213, 85);
-  }
-
-  .red {
-    color: rgb(214, 69, 69);
   }
 }
 

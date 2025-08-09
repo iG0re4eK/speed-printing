@@ -3,7 +3,8 @@ const textfiled = document.querySelector(".text-filed");
 const restartBtn = document.getElementById("restart");
 const toggleLanguage = document.getElementById("languageToggle");
 const toggleTimer = document.getElementById("timerToggle");
-const levels = document.querySelectorAll(".level");
+const settings = document.getElementById("settings");
+const levelMode = document.getElementById("levelMode");
 optionLevels = ["easy", "normal", "hard"];
 const quantityWords = document.getElementById("quantityWords");
 const optionsWords = [10, 25, 50, 100];
@@ -13,6 +14,8 @@ const countWordInfo = document.querySelector(".count-word-info");
 const timer = document.querySelector(".timer");
 let buttonKey = document.querySelectorAll(".button-key");
 
+toggleLanguage.checked = true;
+toggleTimer.checked = true;
 let currentLanguage = "russian";
 let arrayText = [];
 let currentIndex = 0;
@@ -96,16 +99,11 @@ const keyboardLayout = {
   ],
   row5: [{ key: [" ", " "], rect: "rect" }],
 };
+
 const allKeys = [...Object.values(keyboardLayout)];
 
-levels.forEach((level) => {
-  level.addEventListener("click", () => {
-    levels.forEach((lvl) => lvl.classList.add("not-choosed"));
-    level.classList.remove("not-choosed");
-    const levelName = level.textContent.trim().toLowerCase();
-    currentComplexity = complexity[levelName];
-    loadText();
-  });
+restartBtn.addEventListener("click", function () {
+  this.blur();
 });
 
 optionsWords.forEach((value) => {
@@ -158,6 +156,31 @@ quantitySeconds.addEventListener("change", (e) => {
   countSeconds = selectedValue;
 });
 
+optionLevels.forEach((value) => {
+  const id = `level-${value}`;
+
+  const radio = document.createElement("input");
+  radio.type = "radio";
+  radio.id = id;
+  radio.name = "levels";
+  radio.value = value;
+  if (value === "easy") radio.checked = true;
+
+  const label = document.createElement("label");
+  label.htmlFor = id;
+  label.className = "choose";
+  label.textContent = value;
+
+  levelMode.append(radio, label);
+});
+
+levelMode.addEventListener("change", (e) => {
+  const selectedValue = e.target.value;
+
+  currentComplexity = complexity[selectedValue];
+  loadText();
+});
+
 restartBtn.addEventListener("click", () => {
   restartBtn.style.animation = "rotateBtn 0.4s ease 1";
   loadText();
@@ -173,13 +196,15 @@ toggleLanguage.addEventListener("click", () => {
   updateUI();
 });
 
-toggleTimer.addEventListener("change", () => {
+toggleTimer.addEventListener("change", (e) => {
   if (toggleTimer.checked) {
-    timer.classList.remove("hide");
+    quantitySeconds.classList.remove("hide");
   } else {
-    timer.classList.add("hide");
-    resetTimer();
+    quantitySeconds.classList.add("hide");
+
+    timer.textContent = `${countSeconds}.00 s`;
   }
+  resetTimer();
 });
 
 function loadKeyboard() {
@@ -204,6 +229,7 @@ function loadKeyboard() {
 
 function updateUI() {
   gameOver = false;
+
   loadKeyboard();
   loadText();
 }
@@ -222,22 +248,35 @@ function startTimer() {
 }
 
 function updateTimer() {
-  const elapsedTime = Date.now() - startTime;
-  const seconds = (elapsedTime / 1000).toFixed(2);
+  let elapsedTime;
+  let seconds;
+  if (toggleTimer.checked) {
+    elapsedTime = countSeconds * 1000 - (Date.now() - startTime);
+  } else {
+    elapsedTime = Date.now() - startTime;
+  }
+  seconds = (elapsedTime / 1000).toFixed(2);
   timer.textContent = `${seconds} s`;
+  if (seconds <= 0) stopTimer();
 }
 
 function stopTimer() {
   clearInterval(timerInterval);
   isTimerRunning = false;
+  gameOver = true;
 }
 
 function resetTimer() {
   stopTimer();
-  timer.textContent = "0.00 s";
+  if (toggleTimer.checked) {
+    timer.textContent = `${countSeconds}.00 s`;
+  } else {
+    timer.textContent = "0.00 s";
+  }
 }
 
 function loadText() {
+  settings.classList.remove("hide");
   const currentCountWordValue = countWordInfo.querySelector(".current-word");
   currentCountWordValue.textContent = "0";
   resetTimer();
@@ -308,6 +347,7 @@ document.addEventListener("keydown", (e) => {
 
   if (!isTimerRunning && currentIndex === 0) {
     startTimer();
+    settings.classList.add("hide");
   }
 
   const currentElement = document.querySelector(
