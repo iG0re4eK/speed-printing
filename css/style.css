@@ -52,6 +52,7 @@ main {
 }
 
 .utilites {
+  user-select: none;
   display: flex;
   justify-content: space-between;
   margin: 3rem auto 0;
@@ -100,17 +101,18 @@ main {
     transform: scale(1.1) rotate(0deg);
   }
   100% {
-    transform: scale(1.1) rotate(-360deg);
+    transform: scale(1.1) rotate(360deg);
   }
 }
 
 .settings-container {
+  user-select: none;
   margin: 3rem 2rem 0;
 
   .settings {
     display: flex;
-    gap: 1rem;
-    justify-content: space-between;
+
+    gap: 2rem;
     transition: 0.2s ease;
   }
 }
@@ -120,10 +122,18 @@ main {
   opacity: 0.4;
 }
 
+.quantity-mode {
+  display: flex;
+}
+
+.reverse {
+  flex-direction: row-reverse;
+}
+
 .mode-choose {
   display: flex;
   gap: 0.5rem;
-
+  align-items: center;
   .choose {
     position: relative;
     background-color: var(--primary-color);
@@ -174,7 +184,7 @@ main {
     border-radius: 1rem;
     width: 1.5rem;
     height: 1.5rem;
-    background-color: #5884bf;
+    background-color: var(--accent-color);
     transition: 0.2s ease;
   }
 
@@ -186,6 +196,11 @@ main {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
+    display: flex;
+    img {
+      width: 18px;
+      height: 18px;
+    }
   }
 
   .mode.left {
@@ -198,6 +213,7 @@ main {
 }
 
 .text-input-container {
+  user-select: none;
   border-radius: 1rem;
   position: relative;
   display: flex;

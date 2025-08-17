@@ -13,6 +13,7 @@ const optionsSeconds = [10, 30, 60, 120];
 const countWordInfo = document.querySelector(".count-word-info");
 const timer = document.querySelector(".timer");
 let buttonKey = document.querySelectorAll(".button-key");
+const quantityMode = document.querySelector(".quantity-mode");
 
 toggleLanguage.checked = true;
 toggleTimer.checked = true;
@@ -106,72 +107,46 @@ restartBtn.addEventListener("click", function () {
   this.blur();
 });
 
-optionsWords.forEach((value) => {
-  const id = `words-quantity-${value}`;
+function createRadioButtons(container, options, name, defaultValue) {
+  options.forEach((value) => {
+    const id = `${name}-${value}`;
 
-  const radio = document.createElement("input");
-  radio.type = "radio";
-  radio.id = id;
-  radio.name = "wordCount";
-  radio.value = value;
-  if (value === 10) radio.checked = true;
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.id = id;
+    radio.name = name;
+    radio.value = value;
+    if (value === defaultValue) radio.checked = true;
 
-  const label = document.createElement("label");
-  label.htmlFor = id;
-  label.className = "choose";
-  label.textContent = value;
+    const label = document.createElement("label");
+    label.htmlFor = id;
+    label.className = "choose";
+    label.textContent = value;
 
-  quantityWords.append(radio, label);
-});
+    container.append(radio, label);
+  });
+}
+
+createRadioButtons(quantityWords, optionsWords, "wordCount", 10);
+createRadioButtons(quantitySeconds, optionsSeconds, "secondsCount", 10);
+createRadioButtons(levelMode, optionLevels, "levels", "easy");
 
 quantityWords.addEventListener("change", (e) => {
-  const selectedValue = e.target.value;
-  const countWord = countWordInfo.querySelector(".count-word");
-  countWord.textContent = selectedValue;
-  countWords = selectedValue;
-});
+  console.log("gggg");
 
-optionsSeconds.forEach((value) => {
-  const id = `seconds-quantity-${value}`;
-
-  const radio = document.createElement("input");
-  radio.type = "radio";
-  radio.id = id;
-  radio.name = "secondsCount";
-  radio.value = value;
-  if (value === 10) radio.checked = true;
-
-  const label = document.createElement("label");
-  label.htmlFor = id;
-  label.className = "choose";
-  label.textContent = value;
-
-  quantitySeconds.append(radio, label);
+  if (!toggleTimer.checked) {
+    const selectedValue = e.target.value;
+    const countWord = countWordInfo.querySelector(".count-word");
+    countWord.textContent = `/${selectedValue}`;
+    countWords = selectedValue;
+    loadText();
+  }
 });
 
 quantitySeconds.addEventListener("change", (e) => {
   const selectedValue = e.target.value;
-
-  timer.textContent = `${selectedValue}.00 s`;
   countSeconds = selectedValue;
-});
-
-optionLevels.forEach((value) => {
-  const id = `level-${value}`;
-
-  const radio = document.createElement("input");
-  radio.type = "radio";
-  radio.id = id;
-  radio.name = "levels";
-  radio.value = value;
-  if (value === "easy") radio.checked = true;
-
-  const label = document.createElement("label");
-  label.htmlFor = id;
-  label.className = "choose";
-  label.textContent = value;
-
-  levelMode.append(radio, label);
+  timer.textContent = `${countSeconds}.00 s`;
 });
 
 levelMode.addEventListener("change", (e) => {
@@ -183,7 +158,8 @@ levelMode.addEventListener("change", (e) => {
 
 restartBtn.addEventListener("click", () => {
   restartBtn.style.animation = "rotateBtn 0.4s ease 1";
-  loadText();
+  initGame();
+
   setTimeout(() => {
     restartBtn.style.animation = "none";
   }, 400);
@@ -191,20 +167,23 @@ restartBtn.addEventListener("click", () => {
 
 toggleLanguage.addEventListener("click", () => {
   currentLanguage = currentLanguage === "russian" ? "english" : "russian";
-
   toggleLanguage.checked = currentLanguage === "russian";
-  updateUI();
+  initGame();
 });
 
 toggleTimer.addEventListener("change", (e) => {
+  const countWord = countWordInfo.querySelector(".count-word");
+  quantityMode.classList.toggle("reverse");
   if (toggleTimer.checked) {
     quantitySeconds.classList.remove("hide");
+    quantityWords.classList.add("hide");
+    countWord.classList.add("hide");
   } else {
     quantitySeconds.classList.add("hide");
-
-    timer.textContent = `${countSeconds}.00 s`;
+    quantityWords.classList.remove("hide");
+    countWord.classList.remove("hide");
   }
-  resetTimer();
+  initGame();
 });
 
 function loadKeyboard() {
@@ -227,13 +206,7 @@ function loadKeyboard() {
   buttonKey = document.querySelectorAll(".button-key");
 }
 
-function updateUI() {
-  gameOver = false;
-
-  loadKeyboard();
-  loadText();
-}
-
+loadKeyboard();
 function getWordsByLength(words, minLen, maxLen) {
   return words.filter((word) => word.length >= minLen && word.length <= maxLen);
 }
@@ -250,24 +223,28 @@ function startTimer() {
 function updateTimer() {
   let elapsedTime;
   let seconds;
+
   if (toggleTimer.checked) {
     elapsedTime = countSeconds * 1000 - (Date.now() - startTime);
   } else {
     elapsedTime = Date.now() - startTime;
   }
+
   seconds = (elapsedTime / 1000).toFixed(2);
   timer.textContent = `${seconds} s`;
-  if (seconds <= 0) stopTimer();
+  if (seconds <= 0) endGame();
 }
 
 function stopTimer() {
   clearInterval(timerInterval);
   isTimerRunning = false;
   gameOver = true;
+  if (toggleTimer.checked) {
+    timer.textContent = "0.00 s";
+  }
 }
 
 function resetTimer() {
-  stopTimer();
   if (toggleTimer.checked) {
     timer.textContent = `${countSeconds}.00 s`;
   } else {
@@ -275,18 +252,27 @@ function resetTimer() {
   }
 }
 
+function endGame() {
+  gameOver = true;
+  stopTimer();
+
+  const timeInSeconds = toggleTimer.checked
+    ? countSeconds
+    : (Date.now() - startTime) / 1000;
+  const wpm = Math.round(currentCountWords / (timeInSeconds / 60));
+  alert(
+    `Игра окончена! Напечатано слов: ${currentCountWords}, Время: ${timeInSeconds.toFixed(
+      2
+    )} с, Скорость: ${wpm} слов/мин`
+  );
+}
+
 function loadText() {
-  settings.classList.remove("hide");
-  const currentCountWordValue = countWordInfo.querySelector(".current-word");
-  currentCountWordValue.textContent = "0";
-  resetTimer();
-  gameOver = false;
-  currentCountWords = 0;
-  currentIndex = 0;
-  arrayText = [];
-  textfiled.innerHTML = ``;
   fetch(`../data/${currentLanguage}.txt`)
-    .then((response) => response.text())
+    .then((response) => {
+      if (!response.ok) throw new Error("Не удалось загрузить текст");
+      return response.text();
+    })
     .then((data) => {
       const words = data.toLowerCase().split(/\s+/);
       const filterWords = getWordsByLength(
@@ -294,7 +280,9 @@ function loadText() {
         currentComplexity.min,
         currentComplexity.max
       );
-      const n = countWords;
+
+      arrayText = [];
+      let n = toggleTimer.checked ? 500 : countWords;
 
       for (let i = 0; i < n; i++) {
         const randomIndex = Math.floor(Math.random() * filterWords.length);
@@ -319,18 +307,19 @@ function loadText() {
             wordHtml += `<div class="${classes} letter-${i}" data-index="${globalIndex}" data-type="letter">${item[i]}</div>`;
             globalIndex++;
           }
-          html += `<div class="word" >${wordHtml}</div>`;
+          html += `<div class="word">${wordHtml}</div>`;
         }
       });
 
       textfiled.innerHTML = html;
       arrayText = arrayText.join("");
-      console.log(arrayText);
     })
-    .catch((error) => console.error("Ошибка:", error));
+    .catch((error) => {
+      console.error("Ошибка:", error);
+      alert("Ошибка загрузки текста. Попробуйте позже.");
+      initGame();
+    });
 }
-
-updateUI();
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Control" || e.key === "Alt" || e.key === "Meta" || gameOver) {
@@ -338,8 +327,6 @@ document.addEventListener("keydown", (e) => {
   }
 
   buttonKey.forEach((btn) => {
-    console.log(e.key);
-
     if (btn.textContent === e.key) {
       btn.classList.add("press");
     }
@@ -353,7 +340,6 @@ document.addEventListener("keydown", (e) => {
   const currentElement = document.querySelector(
     `[data-index="${currentIndex}"]`
   );
-
   if (!currentElement) return;
 
   const expectedChar = arrayText[currentIndex];
@@ -363,7 +349,7 @@ document.addEventListener("keydown", (e) => {
     currentElement.classList.remove("incorrect", "current");
     currentIndex++;
 
-    if (e.key === " ") {
+    if (e.key === " " && currentElement.dataset.type === "space") {
       currentCountWords++;
       const currentCountWordValue =
         countWordInfo.querySelector(".current-word");
@@ -382,16 +368,18 @@ function moveCursor() {
     .forEach((el) => el.classList.remove("current"));
 
   if (currentIndex >= arrayText.length) {
-    stopTimer();
-    alert("Текст пройден!");
+    const currentCountWordValue = countWordInfo.querySelector(".current-word");
+    currentCountWords++;
+    currentCountWordValue.textContent = currentCountWords;
     gameOver = true;
+    stopTimer();
+    endGame();
     return;
   }
 
   const nextElement = document.querySelector(`[data-index="${currentIndex}"]`);
   if (nextElement) {
     nextElement.classList.add("current");
-
     nextElement.scrollIntoView({
       behavior: "smooth",
       block: "center",
@@ -404,3 +392,30 @@ document.addEventListener("keyup", (e) => {
     btn.classList.remove("press");
   });
 });
+
+function initGame() {
+  settings.classList.remove("hide");
+  const currentCountWordValue = countWordInfo.querySelector(".current-word");
+  const countWord = countWordInfo.querySelector(".count-word");
+  currentCountWordValue.textContent = "0";
+  countWord.textContent = `/${countWords}`;
+  stopTimer();
+  loadText();
+  resetTimer();
+  gameOver = false;
+  currentCountWords = 0;
+  currentIndex = 0;
+  textfiled.innerHTML = ``;
+  if (toggleTimer.checked) {
+    quantitySeconds.classList.remove("hide");
+    quantityWords.classList.add("hide");
+    countWord.classList.add("hide");
+    timer.textContent = `${countSeconds}.00 s`;
+  } else {
+    quantitySeconds.classList.add("hide");
+    quantityWords.classList.remove("hide");
+    countWord.classList.remove("hide");
+  }
+}
+
+initGame();
