@@ -268,7 +268,7 @@ function endGame() {
 }
 
 function loadText() {
-  fetch(`./data/${currentLanguage}.txt`)
+  fetch(`https://ig0re4ek.github.io/speed-printing/data/${currentLanguage}.txt`)
     .then((response) => {
       if (!response.ok) throw new Error("Не удалось загрузить текст");
       return response.text();
