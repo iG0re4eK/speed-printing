@@ -5,7 +5,7 @@ const toggleLanguage = document.getElementById("languageToggle");
 const toggleTimer = document.getElementById("timerToggle");
 const settings = document.getElementById("settings");
 const levelMode = document.getElementById("levelMode");
-optionLevels = ["easy", "normal", "hard"];
+const optionLevels = ["easy", "normal", "hard"];
 const quantityWords = document.getElementById("quantityWords");
 const optionsWords = [10, 25, 50, 100];
 const quantitySeconds = document.getElementById("quantitySeconds");
@@ -267,58 +267,54 @@ function endGame() {
   );
 }
 
-function loadText() {
-  fetch(`../data/${currentLanguage}.txt`)
-    .then((response) => {
-      if (!response.ok) throw new Error("Не удалось загрузить текст");
-      return response.text();
-    })
-    .then((data) => {
-      const words = data.toLowerCase().split(/\s+/);
-      const filterWords = getWordsByLength(
-        words,
-        currentComplexity.min,
-        currentComplexity.max
-      );
+async function loadText() {
+  try {
+    const { russianWords, englishWords } = await import("../data/data.js");
 
-      arrayText = [];
-      let n = toggleTimer.checked ? 500 : countWords;
+    const words = currentLanguage === "russian" ? russianWords : englishWords;
+    const filterWords = getWordsByLength(
+      words,
+      currentComplexity.min,
+      currentComplexity.max
+    );
 
-      for (let i = 0; i < n; i++) {
-        const randomIndex = Math.floor(Math.random() * filterWords.length);
-        arrayText.push(filterWords[randomIndex]);
-        if (i < n - 1) arrayText.push(" ");
-      }
+    arrayText = [];
+    let n = toggleTimer.checked ? 500 : countWords;
 
-      let html = "";
-      let globalIndex = 0;
+    for (let i = 0; i < n; i++) {
+      const randomIndex = Math.floor(Math.random() * filterWords.length);
+      arrayText.push(filterWords[randomIndex]);
+      if (i < n - 1) arrayText.push(" ");
+    }
 
-      arrayText.forEach((item) => {
-        if (item === " ") {
+    let html = "";
+    let globalIndex = 0;
+
+    arrayText.forEach((item) => {
+      if (item === " ") {
+        const isCurrent = globalIndex === 0;
+        const classes = isCurrent ? "space current" : "space";
+        html += `<div class="${classes}" data-index="${globalIndex}" data-type="space"> </div>`;
+        globalIndex++;
+      } else {
+        let wordHtml = "";
+        for (let i = 0; i < item.length; i++) {
           const isCurrent = globalIndex === 0;
-          const classes = isCurrent ? "space current" : "space";
-          html += `<div class="${classes}" data-index="${globalIndex}" data-type="space"> </div>`;
+          const classes = isCurrent ? "letter current" : "letter";
+          wordHtml += `<div class="${classes} letter-${i}" data-index="${globalIndex}" data-type="letter">${item[i]}</div>`;
           globalIndex++;
-        } else {
-          let wordHtml = "";
-          for (let i = 0; i < item.length; i++) {
-            const isCurrent = globalIndex === 0;
-            const classes = isCurrent ? "letter current" : "letter";
-            wordHtml += `<div class="${classes} letter-${i}" data-index="${globalIndex}" data-type="letter">${item[i]}</div>`;
-            globalIndex++;
-          }
-          html += `<div class="word">${wordHtml}</div>`;
         }
-      });
-
-      textfiled.innerHTML = html;
-      arrayText = arrayText.join("");
-    })
-    .catch((error) => {
-      console.error("Ошибка:", error);
-      alert("Ошибка загрузки текста. Попробуйте позже.");
-      initGame();
+        html += `<div class="word">${wordHtml}</div>`;
+      }
     });
+
+    textfiled.innerHTML = html;
+    arrayText = arrayText.join("");
+  } catch (error) {
+    console.error("Ошибка загрузки текста:", error);
+    alert("Ошибка загрузки текста. Попробуйте позже.");
+    initGame();
+  }
 }
 
 document.addEventListener("keydown", (e) => {
